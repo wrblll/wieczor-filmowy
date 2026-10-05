@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>🎬 Wieczór Filmowy 2026</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#141414;
+    color:white;
+    font-family:Segoe UI,Arial,sans-serif;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:30px;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#ccc;
+    margin-bottom:30px;
+}
+
+input[type=text]{
+    width:100%;
+    padding:15px;
+    border-radius:10px;
+    border:none;
+    margin-bottom:25px;
+    font-size:16px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:#222;
+    border-radius:15px;
+    padding:20px;
+    transition:.2s;
+}
+
+.card:hover{
+    transform:translateY(-3px);
+}
+
+.card.selected{
+    border:3px solid #e50914;
+}
+
+.card h3{
+    margin-top:0;
+}
+
+.meta{
+    color:#bbb;
+    font-size:14px;
+}
+
+.voteBtn{
+    width:100%;
+    background:#e50914;
+    color:white;
+    border:none;
+    padding:18px;
+    border-radius:12px;
+    margin-top:30px;
+    cursor:pointer;
+    font-size:18px;
+}
+
+.voteBtn:hover{
+    background:#ff1e1e;
+}
+
+.success{
+    text-align:center;
+    padding:40px;
+    display:none;
+}
+
+small{
+    color:#a8a8a8;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🎬 Wieczór Filmowy 2026</h1>
+
+<div class="subtitle">
+Wybierz maksymalnie 3 filmy.
+<br>
+Jeśli wygra seria filmowa, zrobimy dodatkowe głosowanie na konkretną część.
+</div>
+
+<label>Imię / Ksywka</label>
+
+<input
+id="nick"
+type="text"
+placeholder="np. Ryba"
+/>
+
+<div id="movies" class="grid"></div>
+
+<button class="voteBtn" onclick="submitVote()">
+✅ Oddaj głos
+</button>
+
+<div class="success" id="success">
+<h2>Dzięki za oddanie głosu! 🍿</h2>
+<p>Twój głos został zapisany.</p>
+</div>
+
+</div>
+
+<script>
+
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbzi-KrYR2B-hYDq3kzFKe4T0l2T3ZAaZ5Lh_GUdsYy2MHC0e4HZZCyxN0UFOhgBBaDn/exec";
+
+const movies = [
+
+{
+name:"🧙 Hobbit (2012-2014)",
+time:"144-169 min",
+rating:"Filmweb 7.6 | IMDb 7.7",
+desc:"Bilbo Baggins dołącza do wyprawy mającej odzyskać Erebor."
+},
+
+{
+name:"💍 Władca Pierścieni (2001-2003)",
+time:"178-201 min",
+rating:"Filmweb 8.2 | IMDb 8.9",
+desc:"Epicka walka o losy Śródziemia."
+},
+
+{
+name:"🦸 Avengers (2018-2019)",
+time:"149-181 min",
+rating:"Filmweb 7.9 | IMDb 8.4",
+desc:"Najwięksi bohaterowie Marvela kontra Thanos."
+},
+
+{
+name:"🔫 Deadpool Universe (2016-2024)",
+time:"108-128 min",
+rating:"Filmweb 7.5 | IMDb 7.8",
+desc:"Deadpool, Deadpool 2 i Deadpool & Wolverine."
+},
+
+{
+name:"🚕 Kiler (1997)",
+time:"104 min",
+rating:"Filmweb 7.6 | IMDb 7.5",
+desc:"Jurek Kiler zostaje pomylony z płatnym zabójcą."
+},
+
+{
+name:"🟢 Shrek (2001)",
+time:"90 min",
+rating:"Filmweb 7.8 | IMDb 7.9",
+desc:"Kultowa animacja dla małych i dużych."
+},
+
+{
+name:"💖 Barbie (2023)",
+time:"114 min",
+rating:"Filmweb 6.9 | IMDb 6.8",
+desc:"Różowy świat spotyka rzeczywistość."
+},
+
+{
+name:"👨‍⚕️ Znachor (1981)",
+time:"128 min",
+rating:"Filmweb 8.2 | IMDb 8.1",
+desc:"Polski klasyk o lekarzu, który traci pamięć."
+},
+
+{
+name:"🎶 La La Land (2016)",
+time:"128 min",
+rating:"Filmweb 7.8 | IMDb 8.0",
+desc:"Historia miłości i marzeń."
+},
+
+{
+name:"😂 Friday (1995)",
+time:"91 min",
+rating:"Filmweb 7.2 | IMDb 7.2",
+desc:"Jeden bardzo pechowy dzień."
+},
+
+{
+name:"🔥 Heat (1995)",
+time:"170 min",
+rating:"Filmweb 8.0 | IMDb 8.3",
+desc:"Al Pacino kontra Robert De Niro."
+},
+
+{
+name:"🐎 Szeptacz (1998)",
+time:"169 min",
+rating:"Filmweb 7.6 | IMDb 6.7",
+desc:"Historia odbudowy relacji po tragedii."
+},
+
+{
+name:"🍺 Na rauszu (2020)",
+time:"117 min",
+rating:"Filmweb 7.7 | IMDb 7.7",
+desc:"Eksperyment z niewielką ilością alkoholu we krwi."
+}
+
+];
+
+const container =
+document.getElementById("movies");
+
+movies.forEach(movie=>{
+
+const card=document.createElement("div");
+
+card.className="card";
+
+card.innerHTML=`
+
+<label>
+
+<input type="checkbox"
+value="${movie.name}"
+class="movie">
+
+<h3>${movie.name}</h3>
+
+<div class="meta">
+⏱️ ${movie.time}
+<br>
+⭐ ${movie.rating}
+</div>
+
+<p>${movie.desc}</p>
+
+</label>
+
+`;
+
+container.appendChild(card);
+
+});
+
+document.addEventListener("change",(e)=>{
+
+const checked =
+document.querySelectorAll(".movie:checked");
+
+if(checked.length>3){
+
+e.target.checked=false;
+
+alert(
+"Możesz wybrać maksymalnie 3 filmy."
+);
+
+return;
+}
+
+document.querySelectorAll(".card")
+.forEach(card=>{
+
+const box=card.querySelector(".movie");
+
+card.classList.toggle(
+"selected",
+box.checked
+);
+
+});
+
+});
+
+async function submitVote(){
+
+const nick =
+document.getElementById("nick")
+.value
+.trim();
+
+if(!nick){
+
+alert("Podaj imię lub ksywkę.");
+
+return;
+}
+
+const votes =
+[...document.querySelectorAll(
+".movie:checked"
+)]
+.map(x=>x.value);
+
+if(votes.length===0){
+
+alert(
+"Wybierz przynajmniej 1 film."
+);
+
+return;
+}
+
+const res = await fetch(
+SCRIPT_URL,
+{
+method:"POST",
+body:JSON.stringify({
+nick:nick,
+votes:votes
+})
+}
+);
+
+const data =
+await res.json();
+
+if(!data.success){
+
+alert(data.message);
+
+return;
+}
+
+document
+.querySelector(".container")
+.style.display="none";
+
+document
+.getElementById("success")
+.style.display="block";
+
+}
+
+</script>
+
+</body>
+</html>
